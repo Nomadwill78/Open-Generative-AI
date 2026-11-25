@@ -1,45 +1,47 @@
-# Sprint 3: Isolated mock generation gateway
+# Sprint 3: Isolated mock generation acceptance preview
 
-**Status:** Development branch only. Do not merge or deploy to any existing staging or production app without review. Do not enable paid model credentials.
+**Status:** Development preview only, not production. Draft PR #3 remains unmerged. No paid model API calls, live checkout or real image/video artifacts.
 
-## Components
-- `lib/generation/mock-contract.mjs`: strict request validation, UUID idempotency keys, SHA-256 request fingerprints and immutable mock catalog.
-- `lib/generation/mock-provider.mjs`: deterministic, **zero-network** local mock. It outputs simulated metadata, **not a real image or video**.
-- `lib/generation/gateway-server.mjs`: authentication-context server gateway and allowlisted privileged Supabase RPC calls.
-- `app/mock-studio`: authenticated, explicitly flagged lab and recent job history.
-- `db/generation/sprint-03-mock-gateway.sql`: new columns on existing job records and server-only RPCs to reserve, settle and recover stale mock requests.
-- `tests/nomadGenerationGateway.test.mjs`: model allowlist, request binding, no-paid-provider guarantee and isolated mock RPC accounting.
+## Separate infrastructure
 
-## Synthetic prices (NOT real supplier prices)
-- `mock-image-v1`: 25 **test credits**.
-- `mock-video-v1`: 100 **test credits**.
+- New Supabase sandbox: `srybidmpvzgddjvcxugz` (`nomad-creative-studio-sprint-3-test`). The customer database `raqcqstsqphemgldkwbv` remains separate.
+- Applied sandbox migrations: `nomad_sprint3_isolated_bootstrap`, `nomad_sprint3_mock_gateway`, `nomad_sprint3_sandbox_credit_seed`.
+- Supabase Edge Function: `nomad-mock-generation` with `verify_jwt=true` and explicit Supabase Auth user verification.
+- GitHub source: `supabase/functions/nomad-mock-generation/index.ts`; no third-party model SDK, media generation or paid supplier endpoint.
+- Vercel Preview variables scoped to `nomad/sprint-03-generation-gateway` only: `NOMAD_SUPABASE_URL`, `NOMAD_SUPABASE_PUBLISHABLE_KEY`, `NOMAD_MOCK_DATABASE_REF=srybidmpvzgddjvcxugz`, `NOMAD_MOCK_GENERATION_ENABLED=true`.
+- The Vercel Preview has **no service-role key for the sandbox**. It forwards a verified customer access token to the separate Supabase Edge Function.
+- Existing protected checkout staging and its database are unchanged. The new preview has `NOMAD_STRIPE_TEST_ENABLED` unset, keeping Stripe Checkout disabled.
 
-The client never supplies cost. Both server contract and SQL enforce the model allowlist; the database calculates charge amounts itself.
+## End-to-end architecture
 
-## Atomic accounting and idempotency
-1. Verify the authenticated customer on the server. Never trust user IDs or prices from a form.
-2. Recover that customer's mock-only reservations older than five minutes.
-3. Atomically lock the wallet, check the request UUID and immutable request fingerprint, validate optional project ownership, create the job and deduct credits through the existing ledger function.
-4. Run the deterministic local provider. It does not call an AI API.
-5. On success, mark the job succeeded and retain the reserved charge. On failure, add an equal release credit through the ledger and mark failed. Final states are immutable and settlement retries do not duplicate charges/refunds.
-6. If the process terminates before settlement, a future mock request can release old reservations. Real-provider job states cannot use this mock-only recovery path.
+1. The Next.js server verifies a customer session with Supabase Auth. Unverified users cannot generate.
+2. Form submission validates request UUID, prompt, allowlisted mock model and optional project ID. No user ID or price is accepted from the browser.
+3. The Next.js server sends that customer's access JWT, plus validated request inputs, to `/functions/v1/nomad-mock-generation` at the **sandbox** Supabase origin.
+4. The Edge Function validates the token again with Supabase Auth, requires a confirmed customer, and calculates the prompt SHA-256 fingerprint itself.
+5. A service-role-only RPC grants a **one-time, fixed 500 synthetic test credit allowance** to the verified sandbox customer. This credit allowance is not a Stripe purchase.
+6. The Edge Function recovers stale mock reservations, atomically reserves the hardcoded model price, and runs a deterministic local mock with no external AI API.
+7. On success the charge is finalized. On simulated failure the same credits are released. Duplicate requests and settlement retries are idempotent.
+8. The customer account can inspect only its own credits and job history through RLS. Results say explicitly that no real image or video was produced.
 
-Current supported job statuses are `reserved`, `succeeded` and `failed`. No asynchronous paid provider workflow, object storage or finished user-media asset has been added. Prompts are hashed for request matching rather than persisted in job records.
+Mock prices: `mock-image-v1` costs 25 synthetic credits; `mock-video-v1` costs 100 synthetic credits. Neither amount is a real provider quote.
 
-## Feature gate
-The lab requires `NOMAD_MOCK_GENERATION_ENABLED=true` on an **isolated development preview**, `NOMAD_STRIPE_TEST_ENABLED=true`, and server-side Supabase settings. It forcibly rejects `VERCEL_ENV=production`. It remains disabled in all existing environments unless configured separately. Never set it on a production branch.
+## Safety controls and boundaries
 
-## Verification
-- Normal CI: `npm ci && npm run build:packages && npm test && npm run build`.
-- Supabase transaction-only test: executed the SQL migration and fixtures inside `BEGIN; ...; ROLLBACK;`, proving reservation, duplicate suppression, settlement, failure release, insufficient balance, cross-user project rejection, invalid output rejection and stale reservation recovery.
-- Important: the SQL migration has **not** been applied to the persistent Supabase database. Production/customer balances and the existing staging site were not modified. A controlled isolated dev database is recommended before app-level browser testing.
+- Strict test project host guard in the Vercel gateway and Supabase Edge Function.
+- No Vercel service-role key for sandbox access. Server-to-server operations use Supabase-managed Edge Function credentials.
+- Edge function requires valid user JWT and independently checks the confirmed user.
+- Public and authenticated roles cannot directly execute payment-grade/privileged accounting RPCs.
+- Wallet locking, ownership checks, immutable request fingerprint and unique ledger operation keys.
+- Size-bounded prompts and response payloads. Simulated provider failure refunds credits.
+- The code refuses generation when `VERCEL_ENV` is not `preview`.
+- Requires fresh customer registration for the separate sandbox database; existing staging users are not copied.
+- No persistent user data was inserted during SQL testing. Tests used `BEGIN/ROLLBACK` fixtures.
 
-## Future release blockers
-- Separate test database/preview and migration version management.
-- Login, browser integration and parallel concurrency tests.
-- Rate limits, abuse prevention, and monitoring on gateway actions.
-- Credit accounting for canceled and timed-out real jobs.
-- Model cost/retail pricing and loss-limit approvals before external-provider integration.
-- Signed job receipts, durable output storage, actual provider credentials and refund/dispute policies.
+## Validation and rollout
 
-**No paid AI provider is contacted. No production deployment is authorized.**
+- GitHub CI: dependency install, workspace builds, automated Node tests and Next.js build.
+- Supabase SQL: isolated seed, idempotency, concurrent-safe wallet locking, success/failure settlement, stale recovery, ownership and grants.
+- Protected Preview: page GET checks via the Vercel connector and logged-in browser walkthrough (when supported).
+- **Still required before production:** browser acceptance with a real confirmed test user, concurrency and abuse/rate-limit tests, reconciliation monitoring, accounting audits, review of model supplier costs, and signoff on production billing behavior.
+
+Do not merge to main, enable live payments, add paid AI keys, or deploy to the production site.
