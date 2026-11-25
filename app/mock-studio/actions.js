@@ -17,7 +17,8 @@ export async function generateMock(form){
   outcome=await runMockGeneration(customer.token,{
    requestKey,modelId,prompt,projectId,simulateFailure
   });
- }catch{
+ }catch(error){
+  if(error instanceof Error&&/rate or concurrency limit/.test(error.message))redirect('/mock-studio?notice=limited');
   redirect('/mock-studio?notice=error');
  }
  if(!outcome?.id||!['succeeded','failed','reserved'].includes(outcome.status))
