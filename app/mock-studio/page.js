@@ -29,6 +29,7 @@ export default async function MockStudio({searchParams}){
    <p className="tracking-widest text-[#D4AF37]">NOMAD CREATIVE STUDIO</p>
    <h1 className="text-3xl font-bold">Mock Generation Lab</h1>
    <p className="text-white/70">Sandbox only. No real image, video, or paid provider is invoked. Credits are synthetic test credits.</p>
+   <p className="text-white/70">A newly confirmed sandbox account receives 500 synthetic credits automatically when its first mock generation starts. These credits cannot be used for real AI services.</p>
    <nav className="flex gap-5"><Link href="/account" className="underline">Account</Link><Link href="/commerce" className="underline">Test credit packs</Link></nav>
    {!enabled&&<p role="alert" className="rounded border border-yellow-600/60 p-4">Mock generation is disabled until this development branch has been approved and configured in a separate preview environment.</p>}
    {notice==='succeeded'&&<p role="status">Mock generation succeeded and reserved credits were settled.</p>}
