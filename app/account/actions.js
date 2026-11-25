@@ -37,3 +37,25 @@ export async function createProject(form){
  catch{redirect('/account?notice=project');}
  redirect('/account');
 }
+
+export async function reconcileTestPayment(form){
+ const customer=await currentCustomer();
+ if(!customer)redirect('/account?notice=login');
+ const id=String(form.get('session_id')||'');
+ if(id.length>200||!/^cs_test_[A-Za-z0-9]+$/.test(id))redirect('/account?notice=payment-error');
+ try{
+ const {stripeTestRequest,validateTestSession}=await import('../../lib/commerce/stripe-test.mjs');
+ const session=await stripeTestRequest('/checkout/sessions/'+encodeURIComponent(id));
+ const {user,pack,sessionId}=validateTestSession(session,id);
+ if(user!==customer.user.id)throw new Error('Wrong owner');
+ const origin=new URL(process.env.NOMAD_SUPABASE_URL);
+ if(origin.protocol!=='https:'||!origin.hostname.endsWith('.supabase.co')||origin.origin!==process.env.NOMAD_SUPABASE_URL)throw new Error('Invalid database URL');
+ const key=process.env.NOMAD_SUPABASE_SERVICE_ROLE_KEY;
+ if(!key||key.startsWith('sb_publishable_'))throw new Error('Invalid privileged key');
+ const headers={apikey:key,'Content-Type':'application/json'};
+ if(!key.startsWith('sb_secret_'))headers.Authorization='Bearer '+key;
+ const result=await fetch(origin.origin+'/rest/v1/rpc/nomad_fulfill_test_purchase',{method:'POST',headers,body:JSON.stringify({p_event:null,p_session:sessionId,p_user:user,p_pack:pack.id,p_amount:pack.cents,p_currency:'usd'}),cache:'no-store',redirect:'error',signal:AbortSignal.timeout(12000)});
+ if(!result.ok)throw new Error('Reconciliation failed');
+ }catch{redirect('/account?notice=payment-error');}
+ redirect('/account?notice=payment-confirmed');
+}
