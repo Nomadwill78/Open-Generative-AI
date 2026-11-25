@@ -5,7 +5,7 @@
 ## Separate infrastructure
 
 - New Supabase sandbox: `srybidmpvzgddjvcxugz` (`nomad-creative-studio-sprint-3-test`). The customer database `raqcqstsqphemgldkwbv` remains separate.
-- Applied sandbox migrations: `nomad_sprint3_isolated_bootstrap`, `nomad_sprint3_mock_gateway`, `nomad_sprint3_sandbox_credit_seed`.
+- Applied sandbox migrations: `nomad_sprint3_isolated_bootstrap`, `nomad_sprint3_mock_gateway`, `nomad_sprint3_sandbox_credit_seed`, `nomad_sprint3_verified_welcome_fix`.
 - Supabase Edge Function: `nomad-mock-generation` with `verify_jwt=true` and explicit Supabase Auth user verification.
 - GitHub source: `supabase/functions/nomad-mock-generation/index.ts`; no third-party model SDK, media generation or paid supplier endpoint.
 - Vercel Preview variables scoped to `nomad/sprint-03-generation-gateway` only: `NOMAD_SUPABASE_URL`, `NOMAD_SUPABASE_PUBLISHABLE_KEY`, `NOMAD_MOCK_DATABASE_REF=srybidmpvzgddjvcxugz`, `NOMAD_MOCK_GENERATION_ENABLED=true`.
@@ -18,7 +18,7 @@
 2. Form submission validates request UUID, prompt, allowlisted mock model and optional project ID. No user ID or price is accepted from the browser.
 3. The Next.js server sends that customer's access JWT, plus validated request inputs, to `/functions/v1/nomad-mock-generation` at the **sandbox** Supabase origin.
 4. The Edge Function validates the token again with Supabase Auth, requires a confirmed customer, and calculates the prompt SHA-256 fingerprint itself.
-5. A service-role-only RPC grants a **one-time, fixed 500 synthetic test credit allowance** to the verified sandbox customer. This credit allowance is not a Stripe purchase.
+5. A service-role-only RPC grants a **one-time, fixed 500 synthetic test credit allowance** upon verified email confirmation via a restricted auth trigger. The Edge Function also checks the grant idempotently before mock generation. This credit allowance is not a Stripe purchase.
 6. The Edge Function recovers stale mock reservations, atomically reserves the hardcoded model price, and runs a deterministic local mock with no external AI API.
 7. On success the charge is finalized. On simulated failure the same credits are released. Duplicate requests and settlement retries are idempotent.
 8. The customer account can inspect only its own credits and job history through RLS. Results say explicitly that no real image or video was produced.
