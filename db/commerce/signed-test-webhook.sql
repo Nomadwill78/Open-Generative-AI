@@ -66,6 +66,11 @@ begin
   v_user_text := v_session#>>'{metadata,user_id}';
   v_pack := v_session#>>'{metadata,pack_id}';
   v_amount_text := v_session->>'amount_total';
+  -- Other products share this Stripe test account. Acknowledge and ignore their events.
+  if (v_session#>>'{metadata,product}') is distinct from 'nomad-creative-studio'
+    then return false; end if;
+  if (v_session->>'payment_status') is distinct from 'paid'
+    then return false; end if;
   if v_event_id is null or v_event_id !~ '^evt_[A-Za-z0-9]+$'
     or v_id is null or v_id !~ '^cs_test_[A-Za-z0-9]+$'
     or (v_session->>'livemode') is distinct from 'false'
