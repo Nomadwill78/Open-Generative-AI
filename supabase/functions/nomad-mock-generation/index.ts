@@ -6,7 +6,7 @@ const REQUEST_ID=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0
 const MODELS={'mock-image-v1':{kind:'mock-image',credits:25},
               'mock-video-v1':{kind:'mock-video',credits:100}};
 const respond=(status,data)=>new Response(JSON.stringify(data),{
- status,headers:{'Content-Type':'application/json','Cache-Control':'no-store','X-Content-Type-Options':'nosniff'}
+ status,headers:{'Content-Type':'application/json','Cache-Control':'no-store','X-Content-Type-Options':'nosniff',...(status===429?{'Retry-After':'60'}:{})}
 });
 async function sha256(text){
  const input=new TextEncoder().encode(text);
@@ -66,7 +66,8 @@ Deno.serve(async request=>{
  if(!service.startsWith('sb_secret_'))headers.Authorization='Bearer '+service;
  async function rpc(name,args){
   if(!['nomad_seed_sandbox_wallet','nomad_recover_stale_mock_generations',
-    'nomad_reserve_mock_generation','nomad_settle_mock_generation'].includes(name))
+    'nomad_reserve_mock_generation','nomad_settle_mock_generation',
+    'nomad_mock_record_guardrail'].includes(name))
     throw new Error('Invalid operation');
   const r=await fetch(url+'/rest/v1/rpc/'+name,{
     method:'POST',headers,body:JSON.stringify(args),redirect:'error',
@@ -77,6 +78,9 @@ Deno.serve(async request=>{
     if(/Insufficient credits/i.test(e.message||''))throw new Error('insufficient_credits');
     if(/Idempotency conflict/i.test(e.message||''))throw new Error('idempotency_conflict');
     if(/Project does not belong/i.test(e.message||''))throw new Error('invalid_project');
+    if(/Mock rate limit exceeded/i.test(e.message||''))throw new Error('rate_limited');
+    if(/Mock concurrent job limit exceeded/i.test(e.message||''))throw new Error('concurrent_limited');
+    if(/Mock global capacity exceeded/i.test(e.message||''))throw new Error('capacity_limited');
     throw new Error('database_operation_rejected');
   }
   return r.json();
@@ -98,6 +102,10 @@ Deno.serve(async request=>{
     const refunded=await rpc('nomad_settle_mock_generation',{
       p_user:userId,p_request:payload.requestKey,p_succeeded:false,p_output:null
     });
+    // Telemetry is best effort. Settlement/refund never depends on alert storage.
+    try{await rpc('nomad_mock_record_guardrail',{
+      p_user:userId,p_request:payload.requestKey,p_kind:'provider_failed'
+    });}catch{}
     return respond(200,refunded);
   }
   // No network, model SDKs, files, or supplier usage. Pure deterministic fixture.
@@ -115,6 +123,14 @@ Deno.serve(async request=>{
   return respond(200,settled);
  }catch(e){
   const code=e instanceof Error?e.message:'unknown';
+  if(['rate_limited','concurrent_limited','capacity_limited','insufficient_credits','database_operation_rejected'].includes(code)){
+    try{await rpc('nomad_mock_record_guardrail',{
+      p_user:userId,p_request:payload.requestKey,
+      p_kind:code==='database_operation_rejected'?'database_rejected':code
+    });}catch{}
+  }
+  if(['rate_limited','concurrent_limited','capacity_limited'].includes(code))
+    return respond(429,{error:'Sandbox request limit reached. Retry after 60 seconds.'});
   if(code==='insufficient_credits')return respond(402,{error:'Insufficient test credits'});
   if(code==='idempotency_conflict')return respond(409,{error:'Request ID already used'});
   if(code==='invalid_project')return respond(403,{error:'Invalid project ownership'});
