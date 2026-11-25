@@ -12,8 +12,8 @@ test('Database enforces per-account fixed rate buckets and concurrent job caps',
  assert.match(sql,/requests from nomad_ops\.mock_rate_windows[\s\S]*?>=5/);
  assert.match(sql,/bucket='hour'[\s\S]*?>=30/);
  assert.match(sql,/bucket='day'[\s\S]*?>=100/);
- assert.match(sql,/status='reserved'[\s\S]*?>=2/);
- assert.match(sql,/status='reserved'[\s\S]*?>=20/);
+ assert.match(sql,/status='reserved'[\s\S]*?\)\s*>=\s*2/);
+ assert.match(sql,/status='reserved'[\s\S]*?\)\s*>=\s*20/);
  assert.match(sql,/pg_advisory_xact_lock\(604,4\)/);
  assert.match(sql,/return jsonb_build_object\('id',v_job\.id,'status',v_job\.status/);
 });
