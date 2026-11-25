@@ -2,6 +2,13 @@ name: Nomad build validation
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - 'nomad/sprint-01-foundation'
+
+concurrency:
+  group: nomad-validation-${{ github.ref }}
+  cancel-in-progress: true
 
 permissions:
   contents: read
