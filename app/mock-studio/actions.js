@@ -1,5 +1,4 @@
 'use server';
-import {randomUUID} from 'node:crypto';
 import {redirect} from 'next/navigation';
 import {currentCustomer} from '../../lib/commerce/auth-server';
 import {runMockGeneration,mockGatewayEnabled} from '../../lib/generation/gateway-server.mjs';
@@ -15,7 +14,7 @@ export async function generateMock(form){
  const simulateFailure=form.get('simulate_failure')==='on';
  let outcome;
  try{
-  outcome=await runMockGeneration(customer.user.id,{
+  outcome=await runMockGeneration(customer.token,{
    requestKey,modelId,prompt,projectId,simulateFailure
   });
  }catch{
