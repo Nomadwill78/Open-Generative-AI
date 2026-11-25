@@ -1,12 +1,14 @@
 import Link from 'next/link';
 import {currentCustomer,supabaseRequest} from '../../lib/commerce/auth-server';
-import {register,login,logout,createProject} from './actions';
+import {register,login,logout,createProject,reconcileTestPayment} from './actions';
 export const dynamic='force-dynamic';
 export const metadata={title:'Account | Nomad Creative Studio'};
 const field='w-full rounded border border-white/25 bg-[#202124] p-3';
 const button='rounded bg-[#D4AF37] px-5 py-3 font-semibold text-black';
 export default async function Account({searchParams}){
- const notice=(await searchParams)?.notice;
+ const params=await searchParams;
+ const notice=params?.notice;
+ const sessionId=typeof params?.session_id==='string'?params.session_id:'';
  const customer=await currentCustomer();
  let projects=[],balance=null,failed=false;
  if(customer){
@@ -24,7 +26,9 @@ export default async function Account({searchParams}){
  <p className="tracking-widest text-[#D4AF37]">NOMAD CREATIVE STUDIO</p>
  <h1 className="text-3xl font-bold">{customer?'Your creative workspace':'Customer account'}</h1>
  <p className="text-white/70">Protected test environment. Live purchases and managed generation are disabled.</p>
- {notice==='payment-pending'&&<p role="status">Test payment submitted. Credits appear after verified fulfillment; refresh this page to check.</p>}
+ {notice==='payment-pending'&&<p role="status">Test payment submitted. Verify your payment below while signed in.</p>}
+ {notice==='payment-confirmed'&&<p role="status">Test payment verified. Your wallet reflects the credited purchase.</p>}
+ {notice==='payment-error'&&<p role="alert">Unable to verify this test payment. Contact support or retry using your checkout session ID.</p>}
  {notice==='registration'&&<p role="status">If registration is available, check your email for verification before signing in.</p>}
  {notice==='login'&&<p role="alert">Unable to sign in. Verify your email and credentials, or try again later.</p>}
  {notice==='project'&&<p role="alert">Unable to create project. Check the title and try again.</p>}
@@ -33,7 +37,9 @@ export default async function Account({searchParams}){
  <label className="block">Password (12 characters minimum)<input className={field} name="password" type="password" required minLength={12} maxLength={128} autoComplete="current-password"/></label>
  <div className="flex flex-wrap gap-3"><button className={button} formAction={login}>Sign in</button><button className={button} formAction={register}>Register</button></div>
  </form>:<>
- <p>{customer.user.email}</p><form action={logout}><button className="underline">Sign out</button></form>
+ <p>{customer.user.email}</p>
+ <form action={reconcileTestPayment} className="space-y-2 rounded border border-white/20 p-4"><h2>Verify a test payment</h2><label className="block">Test checkout session<input className={field} name="session_id" defaultValue={sessionId} maxLength={200} required placeholder="cs_test_..."/></label><button className={button}>Verify test payment</button></form>
+ <form action={logout}><button className="underline">Sign out</button></form>
  <section className="rounded-xl border border-white/20 p-6"><h2>Available credits</h2><p className="text-4xl text-[#D4AF37]">{balance===null?'Unavailable':String(balance)}</p><Link href="/commerce" className="underline">View proposed credit packs</Link></section>
  {failed?<p role="alert">Account data unavailable. Try again later.</p>:<section className="space-y-4"><h2 className="text-xl font-bold">Projects</h2>
  <form action={createProject} className="space-y-3"><label className="block">Project title<input name="title" className={field} required maxLength={160}/></label>
