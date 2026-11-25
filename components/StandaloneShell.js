@@ -777,20 +777,20 @@ export default function StandaloneShell({ locale = 'en' }) {
 
             {/* Logo & Title */}
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 bg-[#22d3ee] rounded-lg flex items-center justify-center shadow-lg shadow-[#22d3ee]/20">
+              <div className="w-8 h-8 bg-[#D4AF37] rounded-lg flex items-center justify-center shadow-lg shadow-[#D4AF37]/20">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="black" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
                 </svg>
               </div>
               <span className="text-sm font-bold tracking-tight hidden sm:block text-white">
-                {copy.shell.brand}
+                Nomad Creative Studio
               </span>
             </div>
           </div>
 
           {/* Active Tab Breadcrumb Badge */}
           <div className="hidden lg:flex items-center gap-2 px-3 py-1 rounded-full bg-white/[0.03] border border-white/[0.05] text-xs text-white/60">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#22d3ee]" />
+            <span className="w-1.5 h-1.5 rounded-full bg-[#D4AF37]" />
             <span className="font-medium text-white/80">
               {tabLabel(activeTab) || copy.shell.studioFallback}
             </span>
