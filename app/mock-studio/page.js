@@ -35,6 +35,7 @@ export default async function MockStudio({searchParams}){
    {notice==='succeeded'&&<p role="status">Mock generation succeeded and reserved credits were settled.</p>}
    {notice==='failed'&&<p role="status">Simulated failure. Reserved credits were released.</p>}
    {notice==='error'&&<p role="alert">Generation could not be completed. No paid provider was contacted. Check your credits or try again.</p>}
+   {notice==='limited'&&<p role="alert">This sandbox limits requests to 5 per minute, 30 per hour and 100 per day, with at most 2 active jobs per account. Try again later. No extra credits were charged.</p>}
    {notice==='disabled'&&<p role="alert">The isolated mock gateway is not enabled.</p>}
    {!customer?<p><Link href="/account" className="underline">Sign in to continue.</Link></p>:<>
     <div className="rounded-xl border border-white/20 p-5">
