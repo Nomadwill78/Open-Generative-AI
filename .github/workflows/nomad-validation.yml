@@ -5,6 +5,7 @@ on:
   push:
     branches:
       - 'nomad/sprint-01-foundation'
+      - 'nomad/sprint-02-commerce'
 
 concurrency:
   group: nomad-validation-${{ github.ref }}
