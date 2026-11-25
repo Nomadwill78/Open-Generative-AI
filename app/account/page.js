@@ -23,7 +23,8 @@ export default async function Account({searchParams}){
  <div className="mx-auto max-w-4xl space-y-6">
  <p className="tracking-widest text-[#D4AF37]">NOMAD CREATIVE STUDIO</p>
  <h1 className="text-3xl font-bold">{customer?'Your creative workspace':'Customer account'}</h1>
- <p className="text-white/70">Protected test environment. Purchases and managed generation are disabled.</p>
+ <p className="text-white/70">Protected test environment. Live purchases and managed generation are disabled.</p>
+ {notice==='payment-pending'&&<p role="status">Test payment submitted. Credits appear after verified fulfillment; refresh this page to check.</p>}
  {notice==='registration'&&<p role="status">If registration is available, check your email for verification before signing in.</p>}
  {notice==='login'&&<p role="alert">Unable to sign in. Verify your email and credentials, or try again later.</p>}
  {notice==='project'&&<p role="alert">Unable to create project. Check the title and try again.</p>}
