@@ -9,8 +9,8 @@ const inter = Inter({
 });
 
 export const metadata = {
-  title: 'Open Generative AI — Free AI Image & Video Studio',
-  description: 'Generate AI images and videos using 200+ models — Flux, Midjourney, Kling, Veo, Seedance and more.',
+  title: 'Nomad Creative Studio | AI Multimedia Production',
+  description: 'Create visual assets, videos and multimedia projects with Nomad Creative Studio.',
 };
 
 export default async function RootLayout({ children }) {

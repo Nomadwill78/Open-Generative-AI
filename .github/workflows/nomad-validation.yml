@@ -1,0 +1,37 @@
+name: Nomad build validation
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - 'nomad/sprint-01-foundation'
+
+concurrency:
+  group: nomad-validation-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      NEXT_TELEMETRY_DISABLED: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install locked dependencies
+        run: npm ci
+      - name: Build workspace packages
+        run: npm run build:packages
+      - name: Run existing tests
+        run: npm test
+      - name: Build web application
+        run: npm run build
