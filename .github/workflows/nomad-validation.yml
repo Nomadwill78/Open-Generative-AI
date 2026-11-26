@@ -7,6 +7,7 @@ on:
       - 'nomad/sprint-01-foundation'
       - 'nomad/sprint-02-commerce'
       - 'nomad/sprint-03-generation-gateway'
+      - 'nomad/sprint-04-guardrails-provider-evaluation'
 
 concurrency:
   group: nomad-validation-${{ github.ref }}
