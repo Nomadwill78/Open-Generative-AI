@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import {REAL_PROVIDER_PRICE_PROPOSALS,REAL_PROVIDER_USAGE_ENABLED} from '../../lib/generation/provider-credit-proposals.mjs';
+import {REAL_PROVIDER_PRICE_PROPOSALS,REAL_PROVIDER_USAGE_ENABLED,PILOT_PRICE_POLICY_APPROVED,PILOT_PRICE_POLICY_APPROVAL_DATE} from '../../lib/generation/provider-credit-proposals.mjs';
 export const metadata={title:'Provider Credit Pricing Review | Nomad Creative Studio'};
 export default function ProviderPricing(){
  const categories=[['image','Image generation'],['video','Video generation']];
@@ -8,7 +8,7 @@ export default function ProviderPricing(){
    <p className="tracking-widest text-[#D4AF37]">NOMAD CREATIVE STUDIO</p>
    <h1 className="text-3xl font-semibold">Provider credit pricing review</h1>
    <div role="status" className="rounded border border-yellow-600/70 p-4">
-     These are November 25, 2026 pricing proposals, <strong>not approved for billing or enabled.</strong>
+     November 25, 2026 rate card: <strong>{PILOT_PRICE_POLICY_APPROVED?'Approved for future pilot development':'Awaiting pricing approval'}</strong> on {PILOT_PRICE_POLICY_APPROVAL_DATE}. <strong>Not approved for billing or enabled.</strong>
      Real AI generation is {REAL_PROVIDER_USAGE_ENABLED?'enabled':'disabled'}. No paid provider is connected.
    </div>
    <p className="text-white/70">For pricing comparisons only: one customer credit is valued at $0.01 from the draft credit packs. Supplier prices are public list estimates, not quotes for your account. Individual image prompt inputs, video resolution, retries, storage, delivery, tax and payment processing can change actual cost.</p>
