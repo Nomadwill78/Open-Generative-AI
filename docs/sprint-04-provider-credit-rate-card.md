@@ -1,8 +1,8 @@
-# Sprint 4: Provider-specific customer credit rate card for approval
+# Sprint 4: Approved customer credit rate card for future pilot development
 
-**Prepared November 25, 2026. Status: PENDING BUSINESS OWNER SIGN-OFF.**
+**Rate card dated November 25, 2026. Approved by the business owner on November 26, 2026 for future pilot development only. Not approved for live customer billing or supplier spending.**
 
-These are **proposed retail charges** for a future paid pilot. The app's `REAL_PROVIDER_USAGE_ENABLED=false` and every catalog entry has `approvedForBilling=false`. Publishing this file does **not** create an API account, add funds, expose a paid-generation option, sell new packs, or authorize any supplier spend.
+These are **owner-approved proposed retail charges for future pilot development**. They are not active or available for live billing. The app's `REAL_PROVIDER_USAGE_ENABLED=false` and every catalog entry has `approvedForBilling=false`. Publishing this file does **not** create an API account, add funds, expose a paid-generation option, sell new packs, or authorize any supplier spend.
 
 ## Pricing basis
 
@@ -30,7 +30,7 @@ The existing draft customer credit packs represent `$0.01 per purchased credit`,
 
 ## Release gate and guardrails
 
-1. **Owner approval of the precise table** is required. User instruction to develop or evaluate pricing does not by itself authorize collecting payments or purchasing AI credits. Do not rename the `PROPOSED` catalog as live until explicit confirmation.
+1. **Owner pricing approval received November 26, 2026**, for this exact table and future pilot development only. Do not treat the pricing approval as authorization to bill customers, purchase AI credits, or activate suppliers. Keep the catalog blocked for live billing until separate explicit go-live authorization.
 2. **No paid generation.** Reject all unknown model/quality/duration combinations. The current actual mock prices of 25/100 synthetic credits remain unchanged.
 3. Preflight a provider's current pricing and output parameters before every paid job. If the actual worst-case supplier quote (including inputs, output, retry buffers, tax where applicable, storage and delivery) exceeds **25% of retail-equivalent revenue**, block the job pending a new quote and owner review.
 4. Set a separate **hard USD supplier spend cap**, both total and daily, before enabling any provider. A credit balance is not proof that the business has cash available to pay the supplier.
@@ -42,8 +42,10 @@ The existing draft customer credit packs represent `$0.01 per purchased credit`,
 
 ## Approval record
 
-- Proposed business policy: **Prepared, awaiting explicit approval of amounts.**
+- Business approval: **APPROVED November 26, 2026 for future pilot development only**, exactly as listed in the November 25, 2026 rate card.
 - Source file: `lib/generation/provider-credit-proposals.mjs`.
 - Review page: `/provider-pricing` on the protected development preview.
 - Real provider usage: **disabled**, no provider credentials or prepaid balance.
 - Production checkout or deployment: **not authorized**.
+- Supplier purchases, new API keys, prepaid balances, or paid generation: **not authorized**.
+- Separate release gates: USD spending budget; live-provider contract, credential, usage and margin review; final user approval for billing and production deployment.
