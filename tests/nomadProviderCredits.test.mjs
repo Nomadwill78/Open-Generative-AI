@@ -1,10 +1,13 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {REAL_PROVIDER_USAGE_ENABLED,CUSTOMER_USD_PER_CREDIT,PILOT_PRICE_POLICY_APPROVED,PILOT_PRICE_POLICY_APPROVAL_DATE,
-  REAL_PROVIDER_PRICE_PROPOSALS,quoteProviderProposal} from '../lib/generation/provider-credit-proposals.mjs';
+  REAL_PROVIDER_PRICE_PROPOSALS,quoteProviderProposal,SUPPLIER_PILOT_TOTAL_BUDGET_CENTS,SUPPLIER_PILOT_BUDGET_APPROVED_AT,SUPPLIER_SPENDING_AUTHORIZED} from '../lib/generation/provider-credit-proposals.mjs';
 test('Paid generation is hard-disabled and provider prices remain review-only',()=>{
  assert.equal(PILOT_PRICE_POLICY_APPROVED,true);
  assert.equal(PILOT_PRICE_POLICY_APPROVAL_DATE,'2026-11-26');
+ assert.equal(SUPPLIER_PILOT_TOTAL_BUDGET_CENTS,1200);
+ assert.equal(SUPPLIER_PILOT_BUDGET_APPROVED_AT,'2026-11-26');
+ assert.equal(SUPPLIER_SPENDING_AUTHORIZED,false);
  assert.equal(REAL_PROVIDER_USAGE_ENABLED,false);
  assert.equal(CUSTOMER_USD_PER_CREDIT,0.01);
  assert.ok(REAL_PROVIDER_PRICE_PROPOSALS.length>=9);
